@@ -1,0 +1,32 @@
+version: "3.9"
+   
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python3 manage.py migrate &&
+             python3 manage.py wait_for_db &&
+             python3 manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=macrovueexam
+      - DB_USER=macrovueexam
+      - DB_PASS=macrovueexam
+      - DJANGO_SECRET_KEY=django-insecure-zhmck86w%mlh-&2%s95d@1od1tc72f7!zp$n*)vim+7&!4kp+8
+    volumes:
+      - .:/src
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_NAME=macrovueexam
+      - POSTGRES_USER=macrovueexam
+      - POSTGRES_PASSWORD=macrovueexam
+    ports:
+      - "5432:5432"
