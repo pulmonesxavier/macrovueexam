@@ -9,7 +9,6 @@ class BaseTest(APITestCase):
 
         self.base_user = User.objects.create_user('macrovue', 'test@test.com', 'pass123')
 
-    @expectedFailure
     def test_create_user(self):
         """
         Test a successful user creation.
@@ -20,7 +19,7 @@ class BaseTest(APITestCase):
             'password': 'xavierpass'
         }
 
-        res = self.client.post('api/auth/', data=data, format='json')
+        res = self.client.post('/users/', data=data, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data['email'], data['email'])
         self.assertIsNotNone(User.objects.get(email='xavier@xavier.com'))
