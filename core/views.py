@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 class SignUpViewSet(viewsets.ViewSet):
     """
-    ViewSet for creating and retrieving a user
+    ViewSet for creating a user
     """
     permission_classes = [permissions.AllowAny]
 
@@ -19,3 +19,4 @@ class SignUpViewSet(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
