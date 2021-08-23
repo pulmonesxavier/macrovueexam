@@ -2,14 +2,15 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404
 from core.serializer import UserSerializer 
 
-from rest_framework import status, viewsets
+from rest_framework import status, permissions, viewsets
 from rest_framework.response import Response
 
 
-class UserViewSet(viewsets.ViewSet):
+class SignUpViewSet(viewsets.ViewSet):
     """
     ViewSet for creating and retrieving a user
     """
+    permission_classes = [permissions.AllowAny]
 
     def create(self, request):
         serializer = UserSerializer(data=request.data)
