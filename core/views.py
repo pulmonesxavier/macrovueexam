@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404
 
-from rest_framework import status, permissions, viewsets
+from rest_framework import permissions, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
@@ -80,7 +80,11 @@ class StockViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request):
-        queryset = Stock.objects.all()
+        if request.GET.get('search'):
+            search_param = request.GET.get('search')
+            queryset = Stock.objects.filter(name__contains=search_param)
+        else:
+            queryset = Stock.objects.all()
         serializer = StockSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

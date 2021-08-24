@@ -180,4 +180,22 @@ class StockTests(BaseTest):
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_stock_list_success(self):
+        """
+        Test for successful stock list
+        """
+        res = self.client.get('/stocks/', format='json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
+    def test_stock_list_search_success(self):
+        """
+        Test for successful searching of stock
+        """
+        test_stock = Stock.objects.create(
+            name='Xavier',
+            price='3.24'
+        )
+
+        res = self.client.get('/stocks/?search=Xavier', format='json')
+        self.assertContains(res, test_stock.name)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
