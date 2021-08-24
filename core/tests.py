@@ -199,3 +199,11 @@ class StockTests(BaseTest):
         res = self.client.get('/stocks/?search=Xavier', format='json')
         self.assertContains(res, test_stock.name)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_stock_retrieve_success(self):
+        """
+        Test for successful stock list
+        """
+        res = self.client.get(f'/stocks/{self.base_stock.id}/', format='json')
+        self.assertEqual(res.data['name'], self.base_stock.name)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
