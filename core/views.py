@@ -6,7 +6,8 @@ from rest_framework import status, permissions, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
-from core.serializer import UserSerializer, LoginSerializer
+from core.models import Stock
+from core.serializer import UserSerializer, LoginSerializer, StockSerializer
 
 
 class SignUpViewSet(viewsets.ViewSet):
@@ -53,3 +54,38 @@ class LogoutViewSet(viewsets.ViewSet):
     def list(self, request):
         logout(request)
         return Response({'detail': 'Logout successful'}, status=status.HTTP_200_OK)
+
+
+class StockViewSet(viewsets.ViewSet):
+    """
+    ViewSet for stocks
+    """
+    
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action == 'create':
+            permission_classes = [permissions.IsAdminUser]
+        else:
+            permission_classes = [permissions.AllowAny]
+        return [permission() for permission in permission_classes]
+
+    def create(self, request):
+        serializer = StockSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request):
+        queryset = Stock.objects.all()
+        serializer = StockSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        queryset = Stock.objects.all()
+        stock = get_object_or_404(queryset, pk=pk)
+        serializer = StockSerializer(stock)
+        return Response(serializer.data, status=status.HTTP_200_OK)

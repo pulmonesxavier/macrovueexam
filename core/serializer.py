@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
+from core.models import Stock
+
 
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=User.objects.all())])
@@ -33,4 +35,13 @@ class LoginSerializer(serializers.Serializer):
             return user
 
         raise serializers.ValidationError({'detail': 'Could not login with the supplied credentials'})
+
+
+class StockSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=50, allow_blank=False)
+    price = serializers.DecimalField(max_digits=8, decimal_places=2)
+
+    class Meta:
+        model = Stock
+        fields = ['id', 'name', 'price']
 

@@ -3,12 +3,29 @@ from rest_framework import status
 from unittest import expectedFailure
 from django.contrib.auth.models import User
 
+from core.models import Stock
+
 
 class BaseTest(APITestCase):
     def setUp(self):
 
-        self.base_user = User.objects.create_user('macrovue', 'test@test.com', 'pass123')
+        self.base_user = User.objects.create_user(
+            'macrovue',
+            'test@test.com',
+            'pass123'
+        )
+        self.super_user = User.objects.create_superuser(
+            'supermacrovue',
+            'supertest@test.com',
+            'superpass123'
+        )
+        self.base_stock = Stock.objects.create(
+            name='Sample Stock',
+            price='1.0'
+        )
 
+
+class AuthenticationTests(BaseTest):
     def test_create_user(self):
         """
         Test a successful user creation.
@@ -113,3 +130,54 @@ class BaseTest(APITestCase):
         }
         res = self.client.get('/logout/')
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class StockTests(BaseTest):
+    def test_stock_create_admin(self):
+        """
+        Test a successful stock creation.
+        """
+        data = {
+            'name': 'xavier',
+            'price': '1.2',
+        }
+
+        self.client.login(username=self.super_user.username, password='superpass123')
+        res = self.client.post('/stocks/', data=data, format='json')
+        self.client.logout()
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res.data['name'], data['name'])
+        self.assertIsNotNone(Stock.objects.get(id=res.data['id']))
+
+    def test_stock_create_unauthorized_admin(self):
+        """
+        Test an unauthorized stock creation.
+        """
+        data = {
+            'name': 'xavier',
+            'price': '1.2',
+        }
+
+        self.client.login(username=self.base_user.username, password='pass123')
+        res = self.client.post('/stocks/', data=data, format='json')
+        self.client.logout()
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_stock_create_empty_admin(self):
+        """
+        Test an empty stock creation.
+        """
+        data = {
+            'name': '',
+            'price': '',
+        }
+
+        self.client.login(username=self.super_user.username, password='superpass123')
+        res = self.client.post('/stocks/', data=data, format='json')
+        self.client.logout()
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+
