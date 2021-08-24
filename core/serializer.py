@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -21,4 +22,15 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(min_length=6)
+
+    def validate(self, data):
+        user = authenticate(username=data['username'], password=data['password'])
+        if user is not None:
+            return user
+
+        raise serializers.ValidationError({'detail': 'Could not login with the supplied credentials'})
 

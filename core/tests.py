@@ -62,9 +62,31 @@ class BaseTest(APITestCase):
 
     def test_create_empty_user(self):
         """
-        Test if not data is passed
+        Test if no data is passed
         """
         data = {}
         res = self.client.post('/users/', data=data, format='json')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+    def test_login_success_user(self):
+        """
+        Test for successful user login
+        """
+        data = {
+            'username': 'macrovue',
+            'password': 'pass123'
+        }
+        res = self.client.post('/login/', data=data, format='json')
+        self.assertEqual(res.status_code, status.HTTP_202_ACCEPTED)
+
+    def test_login_wrong_credentials_user(self):
+        """
+        Test if wrong credentials
+        """
+        data = {
+            'username': 'macrovu2e',
+            'password': 'pass123'
+        }
+        res = self.client.post('/login/', data=data, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

@@ -19,10 +19,11 @@ from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
 
-from core.views import SignUpViewSet 
+from core.views import SignUpViewSet, LoginViewSet
 
 router = DefaultRouter()
 router.register(r'users', SignUpViewSet, basename='user')
+router.register(r'login', LoginViewSet, basename='login')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
