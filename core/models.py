@@ -23,6 +23,6 @@ class Order(models.Model):
     ]
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
-    type = models.BooleanField(choices=TYPE_CHOICES, blank=False) 
+    type = models.IntegerField(choices=TYPE_CHOICES, blank=False) 
     quantity = models.PositiveIntegerField(default=0)
 

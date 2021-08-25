@@ -3,7 +3,7 @@ from rest_framework import status
 from unittest import expectedFailure
 from django.contrib.auth.models import User
 
-from core.models import Stock
+from core.models import Order, Stock
 
 
 class BaseTest(APITestCase):
@@ -23,9 +23,18 @@ class BaseTest(APITestCase):
             name='Sample Stock',
             price='1.0'
         )
+        self.base_order = Order.objects.create(
+            owner=self.base_user,
+            stock=self.base_stock,
+            type=1,
+            quantity=100
+        )
 
 
 class AuthenticationTests(BaseTest):
+    """
+    Tests for Authentication functionality
+    """
     def test_create_user(self):
         """
         Test a successful user creation.
@@ -37,6 +46,7 @@ class AuthenticationTests(BaseTest):
         }
 
         res = self.client.post('/users/', data=data, format='json')
+        
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data['email'], data['email'])
         self.assertIsNotNone(User.objects.get(email='xavier@xavier.com'))
@@ -51,6 +61,7 @@ class AuthenticationTests(BaseTest):
             'password': 'xavierpass'
         }
         res = self.client.post('/users/', data=data, format='json')
+        
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_username_taken_user(self):
@@ -63,6 +74,7 @@ class AuthenticationTests(BaseTest):
             'password': 'xavierpass'
         }
         res = self.client.post('/users/', data=data, format='json')
+        
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_short_user(self):
@@ -75,6 +87,7 @@ class AuthenticationTests(BaseTest):
             'password': 'xavi'
         }
         res = self.client.post('/users/', data=data, format='json')
+        
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_empty_user(self):
@@ -83,6 +96,7 @@ class AuthenticationTests(BaseTest):
         """
         data = {}
         res = self.client.post('/users/', data=data, format='json')
+        
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
 
@@ -95,6 +109,7 @@ class AuthenticationTests(BaseTest):
             'password': 'pass123'
         }
         res = self.client.post('/login/', data=data, format='json')
+        
         self.assertEqual(res.status_code, status.HTTP_202_ACCEPTED)
 
     def test_login_wrong_credentials_user(self):
@@ -106,6 +121,7 @@ class AuthenticationTests(BaseTest):
             'password': 'pass123'
         }
         res = self.client.post('/login/', data=data, format='json')
+        
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_logout_success_user(self):
@@ -118,6 +134,7 @@ class AuthenticationTests(BaseTest):
         }
         self.client.post('/login/', data=data, format='json')
         res = self.client.get('/logout/')
+        
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_logout_unauthorized_user(self):
@@ -129,10 +146,14 @@ class AuthenticationTests(BaseTest):
             'password': 'pass123'
         }
         res = self.client.get('/logout/')
+        
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class StockTests(BaseTest):
+    """
+    Tests for Stock Functionalities
+    """
     def test_stock_create_admin(self):
         """
         Test a successful stock creation.
@@ -197,6 +218,7 @@ class StockTests(BaseTest):
         )
 
         res = self.client.get('/stocks/?search=Xavier', format='json')
+        
         self.assertContains(res, test_stock.name)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
@@ -205,5 +227,77 @@ class StockTests(BaseTest):
         Test for successful stock list
         """
         res = self.client.get(f'/stocks/{self.base_stock.id}/', format='json')
+        
         self.assertEqual(res.data['name'], self.base_stock.name)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+
+class OrderTests(BaseTest):
+    """
+    Tests for Order functionalities
+    """
+    def test_order_authentication(self):
+        """
+        Test for order authentication
+        """
+        data = {
+            'owner': self.base_user.id,
+            'stock': self.base_stock.id,
+            'type': 1,
+            'quantity': 100
+        }
+        res = self.client.post('/orders/')
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+    
+    def test_order_create_success(self):
+        """
+        Test for order creation
+        """
+        data = {
+            'owner': self.base_user.id,
+            'stock': self.base_stock.id,
+            'type': 1,
+            'quantity': 100
+        }
+        self.client.login(username=self.base_user.username, password='pass123')
+        res = self.client.post('/orders/', data=data, format='json' )
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+    def test_order_create_forbidden(self):
+        """
+        Test for order creation
+        """
+        data = {
+            'owner': self.super_user.id,
+            'stock': self.base_stock.id,
+            'type': 1,
+            'quantity': 100
+        }
+        self.client.login(username=self.base_user.username, password='pass123')
+        res = self.client.post('/orders/', data=data, format='json')
+        self.client.logout()
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_order_list_success(self):
+        """
+        Test for successful order list
+        """
+        self.client.login(username=self.base_user.username, password='pass123')
+        res = self.client.get('/orders/', format='json')
+        self.client.logout()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_order_retrieve_success(self):
+        """
+        Test for successful order retrieve
+        """
+        self.client.login(username=self.base_user.username, password='pass123')
+        res = self.client.get(f'/orders/{self.base_order.id}/', format='json')
+        self.client.logout()
+
+        self.assertEqual(res.data['id'], self.base_order.id)
         self.assertEqual(res.status_code, status.HTTP_200_OK)

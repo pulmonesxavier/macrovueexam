@@ -3,11 +3,11 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from core.models import Stock
+from core.models import Order, Stock
 
 
 class UserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=User.objects.all())])
+    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
     username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())])
     password = serializers.CharField(min_length=6)
 
@@ -39,9 +39,26 @@ class LoginSerializer(serializers.Serializer):
 
 class StockSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=50, allow_blank=False)
-    price = serializers.DecimalField(max_digits=8, decimal_places=2)
+    price = serializers.DecimalField(max_digits=8, decimal_places=2, allow_null=False)
 
     class Meta:
         model = Stock
         fields = ['id', 'name', 'price']
 
+
+class OrderSerializer(serializers.ModelSerializer):
+    owner = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=True) 
+    stock = serializers.PrimaryKeyRelatedField(queryset=Stock.objects.all(), required=True) 
+    type = serializers.ChoiceField(
+            choices=[
+                (1, 'BUY'),
+                (2, 'SELL'),
+            ],
+            allow_blank=False,
+            allow_null=False
+        )
+    quantity = serializers.IntegerField(min_value=0)
+
+    class Meta:
+        model = Order 
+        fields = ['id', 'owner', 'stock', 'type', 'quantity']
