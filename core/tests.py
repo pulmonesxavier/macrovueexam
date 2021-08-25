@@ -231,6 +231,21 @@ class StockTests(BaseTest):
         self.assertEqual(res.data['name'], self.base_stock.name)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
+    def test_retrieve_total_invested(self):
+        for x in range(1, 10):
+            Order.objects.create(
+                owner=self.base_user,
+                stock=self.base_stock,
+                type=1,
+                quantity=100
+            )
+        data = {
+            'owner': self.base_user.id,
+            'stock': self.base_stock.id,
+        }
+        res = self.client.post('/total-invested/', data=data, format='json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data['total_invested'], self.base_stock.get_total_invested(self.base_user))
 
 class OrderTests(BaseTest):
     """

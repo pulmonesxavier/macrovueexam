@@ -12,6 +12,14 @@ class Stock(models.Model):
     def __str__(self):
         return self.name
 
+    def get_total_invested(self, user):
+        
+        total_invested = 0
+        order_list = Order.objects.filter(owner=user, stock=self)
+        for order in order_list:
+            total_invested += (float(order.quantity)*float(self.price))
+        return total_invested
+
 
 class Order(models.Model):
     """

@@ -7,7 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
 from core.models import Order, Stock
-from core.serializer import LoginSerializer, OrderSerializer, StockSerializer, UserSerializer
+from core.serializer import LoginSerializer, OrderSerializer, StockSerializer, TotalInvestedSerializer, UserSerializer
 
 
 class SignUpViewSet(viewsets.ViewSet):
@@ -99,7 +99,6 @@ class OrderViewSet(viewsets.ViewSet):
     """
     ViewSet for Orders
     """
-
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request):
@@ -112,12 +111,25 @@ class OrderViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request):
-        queryset = Order.objects.filter(owner=request.user)
+        queryset = Order.objects.all()
         serializer = OrderSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
-        queryset = Order.objects.filter(owner=request.user)
+        queryset = Order.objects.all()
         order = get_object_or_404(queryset, pk=pk)
         serializer = OrderSerializer(order)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class TotalInvestedViewSet(viewsets.ViewSet):
+    """
+    ViewSet for total invested on a Stock by a User
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def create(self, request):
+        serializer = TotalInvestedSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

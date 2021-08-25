@@ -62,3 +62,12 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order 
         fields = ['id', 'owner', 'stock', 'type', 'quantity']
+
+class TotalInvestedSerializer(serializers.Serializer):
+    owner = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=True) 
+    stock = serializers.PrimaryKeyRelatedField(queryset=Stock.objects.all(), required=True)
+    total_invested = serializers.SerializerMethodField()
+
+    def get_total_invested(self, data):
+        total_stock = data['stock'].get_total_invested(data['owner'])
+        return total_stock
